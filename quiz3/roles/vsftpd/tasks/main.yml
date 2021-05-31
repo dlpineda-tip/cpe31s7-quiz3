@@ -1,0 +1,43 @@
+---
+# tasks file for roles/vsftpd
+- name: Installing VSFTPD
+  yum:
+    name: vsftpd
+    state: latest
+    update_cache: yes
+
+- name: Creating FTP user
+  user:
+    name: "{{ user }}"
+    password: " {{ password | password_hash ('sha512') }}"
+    
+- name: Denying user
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    line: "DenyUsers {{ user }}"
+  register: sshd_config
+
+- name: Restarting SSHD service
+  service:
+    name: sshd
+    state: restarted
+  when: sshd_config.changed
+
+- name: Creating FTP directory
+  file:
+    path: "/home/{{ user }}/ftp"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+
+- name: Copying configuration file
+  copy:
+    src: vsftpd.conf
+    dest: /etc/vsftpd.conf
+  register: vsftpd_config
+
+- name: Restart vsftp.conf
+  service:
+    name: vsftpd
+    state: restarted
+  when: vsftpd_config.changed

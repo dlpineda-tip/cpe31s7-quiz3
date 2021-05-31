@@ -1,0 +1,13 @@
+---
+- name: Installing VSFTPD
+  hosts: target
+
+  tasks:
+  - name: Include variables from config.yaml
+    include_vars:
+      file: config.yaml
+ 
+  - name: Install vsftpd
+    include_role:
+      name: vsftpd
+    when: ansible_distribution == 'CentOS'
